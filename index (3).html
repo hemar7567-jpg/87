@@ -1,0 +1,1712 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CryptoMiner Pro</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg0: #06060f;
+  --bg1: #0d0d20;
+  --bg2: #13132a;
+  --bg3: #1a1a38;
+  --accent: #00e5ff;
+  --accent2: #7c3aed;
+  --gold: #ffd700;
+  --gold2: #ff9500;
+  --green: #00ff88;
+  --red: #ff3b5c;
+  --purple: #a855f7;
+  --border: rgba(255,255,255,0.07);
+  --border-accent: rgba(0,229,255,0.25);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
+
+body{
+  background:var(--bg0);
+  color:#fff;
+  font-family:'Space Grotesk',sans-serif;
+  min-height:100vh;
+  overflow-x:hidden;
+  overflow-y:auto;
+}
+
+/* ===== PARTICLES ===== */
+#particles{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:.4;}
+
+/* ===== LAYOUT ===== */
+.app{position:relative;z-index:1;max-width:430px;margin:0 auto;display:flex;flex-direction:column;min-height:100vh;}
+
+/* ===== TOP BAR ===== */
+.topbar{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 12px;
+  background:var(--bg1);
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:50;
+}
+.tb-avatar{
+  width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,var(--accent2),var(--accent));
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;
+}
+.tb-info{flex:1;min-width:0;}
+.tb-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tb-level{font-size:10px;color:var(--accent);font-family:'Orbitron',monospace;letter-spacing:1px;}
+.tb-right{display:flex;align-items:center;gap:6px;}
+.tb-ton{
+  background:rgba(0,100,255,0.15);border:1px solid rgba(0,100,255,0.3);
+  border-radius:8px;padding:4px 8px;font-size:11px;font-weight:700;
+  color:#4a9eff;cursor:pointer;white-space:nowrap;
+}
+.tb-ton.connected{color:var(--green);border-color:rgba(0,255,136,0.3);background:rgba(0,255,136,0.08);}
+
+/* ===== BALANCE SECTION ===== */
+.balance-section{
+  padding:14px 12px 10px;
+  background:var(--bg1);
+  text-align:center;
+  border-bottom:1px solid var(--border);
+}
+.balance-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:4px;}
+.balance-num{
+  font-family:'Orbitron',monospace;font-size:30px;font-weight:900;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  background-clip:text;
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  letter-spacing:1px;
+}
+.balance-icon{font-size:24px;}
+.balance-sub{font-size:11px;color:rgba(255,255,255,.35);letter-spacing:1px;}
+
+/* passive bar */
+.passive-row{
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  margin-top:8px;
+}
+.passive-pill{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:20px;padding:4px 12px;font-size:11px;
+  display:flex;align-items:center;gap:5px;
+}
+.passive-pill span{color:var(--green);font-weight:700;font-family:'Orbitron',monospace;font-size:10px;}
+
+/* energy */
+.energy-row{margin-top:10px;padding:0 4px;}
+.energy-head{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.35);margin-bottom:4px;}
+.energy-track{height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;}
+.energy-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:3px;transition:width .3s;}
+
+/* ===== COIN ZONE ===== */
+.coin-zone{
+  display:flex;flex-direction:column;align-items:center;
+  padding:16px 12px 10px;
+  position:relative;
+}
+
+/* active boost bar */
+.boost-active-bar{
+  width:100%;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.2);
+  border-radius:10px;padding:6px 14px;margin-bottom:10px;
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:12px;font-weight:700;color:var(--gold);
+}
+.boost-active-bar.hidden{display:none;}
+.boost-timer{font-family:'Orbitron',monospace;font-size:11px;}
+
+/* combo */
+.combo-bar{
+  position:absolute;top:8px;right:12px;
+  background:var(--bg2);border:1px solid var(--border-accent);
+  border-radius:10px;padding:4px 10px;font-size:11px;
+  font-family:'Orbitron',monospace;color:var(--accent);
+  opacity:0;transition:opacity .3s;
+}
+.combo-bar.visible{opacity:1;}
+
+.coin-outer{
+  position:relative;width:190px;height:190px;
+  display:flex;align-items:center;justify-content:center;
+}
+.coin-ring{
+  position:absolute;border-radius:50%;
+  border:1.5px solid rgba(0,229,255,.15);
+  animation:rspin linear infinite;
+}
+.r1{width:180px;height:180px;animation-duration:10s;}
+.r2{width:158px;height:158px;animation-duration:7s;animation-direction:reverse;border-style:dashed;border-color:rgba(124,58,237,.2);}
+.r3{width:136px;height:136px;animation-duration:14s;border-color:rgba(255,215,0,.1);}
+@keyframes rspin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+.coin{
+  width:120px;height:120px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;position:relative;z-index:2;
+  transition:transform .1s ease;
+  flex-shrink:0;
+}
+.coin:active{transform:scale(.88);}
+.coin.pop{animation:coinpop .18s ease;}
+@keyframes coinpop{0%{transform:scale(1)}50%{transform:scale(.84)}100%{transform:scale(1)}}
+
+/* skin-based coin styles */
+.skin-btc .coin{background:radial-gradient(circle at 35% 35%,#ffe566,#f7931a 55%,#c06a0a);box-shadow:0 0 40px rgba(247,147,26,.5),inset 0 -5px 10px rgba(0,0,0,.3),inset 0 4px 8px rgba(255,255,255,.25);}
+.skin-eth .coin{background:radial-gradient(circle at 35% 35%,#b3c6ff,#627eea 55%,#3a4fcf);box-shadow:0 0 40px rgba(98,126,234,.6),inset 0 -5px 10px rgba(0,0,0,.3);}
+.skin-ton .coin{background:radial-gradient(circle at 35% 35%,#a0d4ff,#0088cc 55%,#005a99);box-shadow:0 0 40px rgba(0,136,204,.6),inset 0 -5px 10px rgba(0,0,0,.3);}
+.skin-doge .coin{background:radial-gradient(circle at 35% 35%,#fffacc,#c2a83e 55%,#8a6e1a);box-shadow:0 0 40px rgba(194,168,62,.5),inset 0 -5px 10px rgba(0,0,0,.3);}
+.skin-sol .coin{background:radial-gradient(circle at 35% 35%,#ffa3ff,#9945ff 55%,#6424c0);box-shadow:0 0 40px rgba(153,69,255,.6),inset 0 -5px 10px rgba(0,0,0,.3);}
+.skin-xrp .coin{background:radial-gradient(circle at 35% 35%,#c0f8ff,#00aad4 55%,#007a99);box-shadow:0 0 40px rgba(0,170,212,.5),inset 0 -5px 10px rgba(0,0,0,.3);}
+
+.coin-label{font-size:44px;pointer-events:none;}
+.coin-inner{position:absolute;width:104px;height:104px;border-radius:50%;border:2px solid rgba(255,255,255,.15);pointer-events:none;}
+
+.tap-hint{font-size:11px;color:rgba(255,255,255,.25);letter-spacing:2px;margin-top:10px;animation:phint 2.5s ease-in-out infinite;}
+@keyframes phint{0%,100%{opacity:.25}50%{opacity:.55}}
+
+/* float +N */
+.floater{
+  position:fixed;pointer-events:none;z-index:200;
+  font-family:'Orbitron',monospace;font-weight:700;
+  font-size:18px;color:var(--gold);
+  text-shadow:0 0 10px rgba(255,200,0,.8);
+  animation:floatup .9s ease-out forwards;
+}
+@keyframes floatup{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-90px) scale(1.4)}}
+
+/* ===== NAV TABS ===== */
+.nav{
+  display:flex;gap:2px;padding:8px 10px;
+  background:var(--bg1);border-top:1px solid var(--border);
+  position:sticky;bottom:0;z-index:50;
+}
+.nav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:6px 2px;border-radius:10px;cursor:pointer;
+  font-size:9px;font-weight:600;color:rgba(255,255,255,.35);
+  transition:all .2s;letter-spacing:.5px;text-transform:uppercase;
+  touch-action: manipulation;
+}
+.nav-btn .nav-icon{font-size:20px;}
+.nav-btn.active{color:var(--accent);background:rgba(0,229,255,.07);}
+.nav-badge{
+  position:absolute;top:-2px;right:-2px;
+  width:8px;height:8px;border-radius:50%;background:var(--red);
+}
+.nav-icon-wrap{position:relative;display:inline-block;}
+
+/* ===== PAGES ===== */
+.page{display:none;flex-direction:column;gap:10px;padding:10px 12px 80px;}
+.page.active{display:flex;}
+
+/* section header */
+.sec-head{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:2px;
+}
+.sec-title{font-size:13px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:1px;text-transform:uppercase;}
+.sec-sub{font-size:11px;color:rgba(255,255,255,.25);}
+
+/* ===== CARD BASE ===== */
+.card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;
+}
+.card.glow-accent{border-color:var(--border-accent);}
+.card.glow-gold{border-color:rgba(255,215,0,.25);}
+.card.glow-green{border-color:rgba(0,255,136,.2);}
+
+/* ===== UPGRADES ===== */
+.upg-item{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;
+  cursor:pointer;transition:background .15s;
+  border-bottom:1px solid var(--border);
+  touch-action: manipulation;
+}
+.upg-item:last-child{border-bottom:none;}
+.upg-item:active{background:rgba(255,255,255,.03);}
+.upg-icon{font-size:30px;min-width:38px;text-align:center;}
+.upg-body{flex:1;min-width:0;}
+.upg-name{font-size:13px;font-weight:700;margin-bottom:1px;}
+.upg-desc{font-size:10px;color:rgba(255,255,255,.35);margin-bottom:5px;}
+.upg-prog{height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;}
+.upg-bar{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:2px;transition:width .3s;}
+.upg-right{text-align:right;min-width:64px;}
+.upg-cost{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--gold);}
+.upg-lvl{font-size:9px;color:rgba(255,255,255,.3);margin-top:2px;}
+.upg-maxed{font-size:11px;color:var(--green);font-weight:700;}
+.upg-item.can-buy .upg-name{color:var(--accent);}
+.upg-item.can-buy{border-left:3px solid var(--accent);}
+.upg-item.maxed{opacity:.55;cursor:default;}
+
+/* ===== MINERS ===== */
+.miner-item{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;
+  cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s;
+  touch-action: manipulation;
+}
+.miner-item:last-child{border-bottom:none;}
+.miner-item:active{background:rgba(255,255,255,.03);}
+.miner-icon{font-size:28px;min-width:38px;text-align:center;}
+.miner-body{flex:1;min-width:0;}
+.miner-name{font-size:13px;font-weight:700;}
+.miner-rate{font-size:10px;color:var(--green);}
+.miner-cost{font-size:10px;color:rgba(255,255,255,.3);margin-top:2px;}
+.miner-right{text-align:right;min-width:48px;}
+.miner-count{font-family:'Orbitron',monospace;font-size:16px;font-weight:700;color:var(--accent);}
+.miner-item.can-buy .miner-name{color:var(--green);}
+.miner-item.can-buy{border-left:3px solid var(--green);}
+
+/* ===== BOOSTS ===== */
+.boost-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.boost-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:14px;
+  padding:12px;text-align:center;cursor:pointer;transition:all .2s;
+  position:relative;overflow:hidden;
+  touch-action: manipulation;
+}
+.boost-card:active{transform:scale(.97);}
+.boost-card.active-boost{border-color:rgba(255,215,0,.4);background:rgba(255,215,0,.05);}
+.boost-card.on-cooldown{opacity:.5;cursor:default;}
+.boost-icon{font-size:32px;margin-bottom:6px;}
+.boost-name{font-size:12px;font-weight:700;margin-bottom:3px;}
+.boost-desc{font-size:10px;color:rgba(255,255,255,.35);margin-bottom:6px;line-height:1.4;}
+.boost-btn{
+  background:rgba(0,229,255,.1);border:1px solid var(--border-accent);
+  border-radius:8px;padding:5px 8px;font-size:10px;font-weight:700;
+  color:var(--accent);font-family:'Orbitron',monospace;
+  cursor:pointer;width:100%;
+}
+.boost-cd{font-size:10px;color:var(--red);font-family:'Orbitron',monospace;margin-top:4px;}
+.boost-free-tag{
+  position:absolute;top:6px;right:6px;
+  background:rgba(0,255,136,.15);border:1px solid rgba(0,255,136,.3);
+  border-radius:5px;padding:2px 5px;font-size:8px;font-weight:700;color:var(--green);
+}
+
+/* ===== QUESTS ===== */
+.quest-item{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;
+  border-bottom:1px solid var(--border);
+}
+.quest-item:last-child{border-bottom:none;}
+.quest-icon{font-size:26px;min-width:36px;text-align:center;}
+.quest-body{flex:1;min-width:0;}
+.quest-name{font-size:12px;font-weight:700;margin-bottom:3px;}
+.quest-prog-row{display:flex;align-items:center;gap:8px;}
+.quest-track{flex:1;height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;}
+.quest-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:2px;transition:width .5s;}
+.quest-pct{font-size:9px;color:rgba(255,255,255,.3);min-width:28px;text-align:right;}
+.quest-reward{
+  background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.2);
+  border-radius:8px;padding:4px 8px;font-size:10px;font-weight:700;
+  color:var(--gold);white-space:nowrap;cursor:pointer;
+  touch-action: manipulation;
+}
+.quest-reward.done{background:rgba(0,255,136,.08);border-color:rgba(0,255,136,.2);color:var(--green);}
+.quest-reward.claimed{background:rgba(255,255,255,.04);border-color:var(--border);color:rgba(255,255,255,.2);cursor:default;}
+
+/* ===== SKINS ===== */
+.skin-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.skin-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:14px;
+  padding:14px 10px;text-align:center;cursor:pointer;transition:all .2s;
+  position:relative;
+}
+.skin-card.active{border-color:var(--gold);box-shadow:0 0 16px rgba(255,215,0,.2);}
+.skin-card.locked{opacity:.5;}
+.skin-card:active{transform:scale(.97);}
+.skin-preview{font-size:44px;margin-bottom:6px;}
+.skin-name{font-size:12px;font-weight:700;margin-bottom:3px;}
+.skin-unlock{font-size:10px;color:rgba(255,255,255,.3);}
+.skin-active-tag{
+  position:absolute;top:6px;right:6px;
+  background:rgba(255,215,0,.15);border:1px solid rgba(255,215,0,.3);
+  border-radius:5px;padding:2px 5px;font-size:8px;font-weight:700;color:var(--gold);
+}
+.skin-lock-icon{position:absolute;top:6px;left:6px;font-size:14px;opacity:.6;}
+
+/* ===== LEADERBOARD ===== */
+.leader-item{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;
+  border-bottom:1px solid var(--border);
+}
+.leader-item:last-child{border-bottom:none;}
+.leader-rank{
+  font-family:'Orbitron',monospace;font-size:13px;font-weight:700;
+  min-width:28px;text-align:center;color:rgba(255,255,255,.3);
+}
+.leader-rank.gold{color:var(--gold);}
+.leader-rank.silver{color:#c0c0c0;}
+.leader-rank.bronze{color:#cd7f32;}
+.leader-ava{
+  width:34px;height:34px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;
+}
+.leader-body{flex:1;min-width:0;}
+.leader-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.leader-sub{font-size:10px;color:rgba(255,255,255,.3);}
+.leader-score{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:var(--gold);text-align:right;}
+.leader-item.is-me{background:rgba(0,229,255,.04);}
+
+/* ===== REFERRAL ===== */
+.ref-card{
+  background:var(--bg2);border:1px solid var(--border-accent);border-radius:16px;
+  padding:16px;
+}
+.ref-title{font-size:16px;font-weight:700;margin-bottom:4px;}
+.ref-desc{font-size:12px;color:rgba(255,255,255,.4);line-height:1.5;margin-bottom:14px;}
+.ref-link-box{
+  background:var(--bg3);border:1px solid var(--border);border-radius:10px;
+  padding:10px 12px;font-family:monospace;font-size:11px;color:var(--accent);
+  word-break:break-all;margin-bottom:10px;
+}
+.ref-actions{display:flex;gap:8px;}
+.ref-btn{
+  flex:1;padding:10px;border-radius:10px;border:none;
+  font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;
+  cursor:pointer;transition:all .2s;
+  touch-action: manipulation;
+}
+.ref-btn.copy{background:rgba(0,229,255,.1);color:var(--accent);border:1px solid var(--border-accent);}
+.ref-btn.share{background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;}
+.ref-btn:active{transform:scale(.97);}
+
+.ref-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+.ref-stat{
+  background:var(--bg3);border-radius:10px;padding:10px;text-align:center;
+}
+.ref-stat-val{font-family:'Orbitron',monospace;font-size:18px;font-weight:700;color:var(--accent);}
+.ref-stat-lbl{font-size:10px;color:rgba(255,255,255,.3);margin-top:2px;}
+
+/* ===== TON ===== */
+.ton-card{
+  background:linear-gradient(135deg,rgba(0,80,160,.15),rgba(0,136,204,.1));
+  border:1px solid rgba(0,136,204,.3);border-radius:16px;padding:16px;
+}
+.ton-logo{font-size:36px;margin-bottom:8px;}
+.ton-title{font-size:15px;font-weight:700;margin-bottom:4px;}
+.ton-desc{font-size:11px;color:rgba(255,255,255,.4);line-height:1.5;margin-bottom:14px;}
+.ton-addr{
+  background:rgba(0,0,0,.3);border:1px solid rgba(0,136,204,.2);
+  border-radius:10px;padding:8px 12px;font-family:monospace;font-size:10px;
+  color:#4a9eff;word-break:break-all;margin-bottom:10px;
+}
+.ton-connect-btn{
+  width:100%;padding:12px;border-radius:12px;border:none;
+  background:linear-gradient(135deg,#0088cc,#005a99);color:#fff;
+  font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;
+  cursor:pointer;transition:all .2s;
+  touch-action: manipulation;
+}
+.ton-connect-btn:active{transform:scale(.98);}
+.ton-exchange{
+  margin-top:14px;background:var(--bg3);border-radius:12px;padding:12px;
+}
+.ton-exch-title{font-size:12px;font-weight:700;margin-bottom:10px;color:rgba(255,255,255,.6);}
+.ton-rate{display:flex;align-items:center;justify-content:space-between;font-size:12px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.ton-rate span:first-child{color:rgba(255,255,255,.4);}
+.ton-rate span:last-child{font-weight:700;font-family:'Orbitron',monospace;font-size:11px;}
+.ton-withdraw-row{display:flex;gap:8px;}
+.ton-input{
+  flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+  padding:8px 10px;color:#fff;font-family:'Exo 2',sans-serif;font-size:13px;
+  outline:none;
+}
+.ton-withdraw-btn{
+  padding:8px 14px;border-radius:8px;border:none;
+  background:rgba(0,136,204,.2);color:#4a9eff;font-weight:700;font-size:12px;
+  cursor:pointer;white-space:nowrap;
+  touch-action: manipulation;
+}
+
+/* ===== ACHIEVEMENTS ===== */
+.ach-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.ach-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:14px;
+  padding:12px;text-align:center;transition:all .3s;
+}
+.ach-card.unlocked{border-color:rgba(255,215,0,.3);background:rgba(255,215,0,.04);}
+.ach-card-icon{font-size:30px;margin-bottom:5px;filter:grayscale(1);transition:filter .3s;}
+.ach-card.unlocked .ach-card-icon{filter:none;}
+.ach-card-name{font-size:11px;font-weight:700;margin-bottom:2px;}
+.ach-card-desc{font-size:9px;color:rgba(255,255,255,.3);}
+.ach-card.unlocked .ach-card-desc{color:var(--gold);}
+
+/* ===== NOTIF ===== */
+.notif{
+  position:fixed;top:16px;left:50%;transform:translateX(-50%);
+  background:var(--bg3);border:1px solid var(--accent);
+  border-radius:12px;padding:9px 20px;font-size:12px;font-weight:700;color:var(--accent);
+  z-index:1000;white-space:nowrap;
+  animation:nin .25s ease,nout .25s ease 1.75s forwards;
+  box-shadow:0 0 20px rgba(0,229,255,.2);
+}
+@keyframes nin{from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes nout{to{opacity:0;transform:translateX(-50%) translateY(-8px)}}
+
+/* level up overlay */
+.lvlup-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:500;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  animation:fadein .3s ease;
+}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.lvlup-box{
+  background:var(--bg2);border:2px solid var(--gold);border-radius:24px;
+  padding:32px;text-align:center;max-width:280px;
+  box-shadow:0 0 60px rgba(255,215,0,.3);
+}
+.lvlup-emoji{font-size:64px;margin-bottom:12px;}
+.lvlup-title{font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:var(--gold);margin-bottom:6px;}
+.lvlup-sub{font-size:14px;color:rgba(255,255,255,.6);margin-bottom:20px;}
+.lvlup-btn{
+  padding:12px 32px;border-radius:12px;border:none;
+  background:linear-gradient(135deg,var(--gold2),var(--gold));
+  color:#000;font-family:'Exo 2',sans-serif;font-size:14px;font-weight:800;
+  cursor:pointer;
+}
+
+/* misc */
+.divider{height:1px;background:var(--border);margin:4px 0;}
+.tag{display:inline-block;padding:2px 7px;border-radius:5px;font-size:9px;font-weight:700;letter-spacing:.5px;}
+.tag-new{background:rgba(0,229,255,.12);color:var(--accent);border:1px solid rgba(0,229,255,.2);}
+.tag-hot{background:rgba(255,59,92,.12);color:var(--red);border:1px solid rgba(255,59,92,.2);}
+.tag-soon{background:rgba(255,255,255,.06);color:rgba(255,255,255,.3);border:1px solid var(--border);}
+
+.empty-state{text-align:center;padding:30px 20px;color:rgba(255,255,255,.2);font-size:13px;}
+.empty-icon{font-size:40px;margin-bottom:8px;}
+</style>
+</head>
+<body>
+<canvas id="particles"></canvas>
+<div class="app">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="tb-avatar" id="tb-avatar">👤</div>
+    <div class="tb-info">
+      <div class="tb-name" id="tb-name">Игрок</div>
+      <div class="tb-level" id="tb-level">УРОВЕНЬ 1 · НОВИЧОК</div>
+    </div>
+    <div class="tb-right">
+      <div class="tb-ton" id="ton-btn" onclick="openTonPage()">💎 TON</div>
+    </div>
+  </div>
+
+  <!-- BALANCE -->
+  <div class="balance-section">
+    <div class="balance-row">
+      <div class="balance-icon" id="bal-icon">₿</div>
+      <div class="balance-num" id="balance-display">0</div>
+    </div>
+    <div class="balance-sub">ВАШИ МОНЕТЫ</div>
+    <div class="passive-row">
+      <div class="passive-pill">⛏️ <span id="passive-display">0.0</span>/сек</div>
+      <div class="passive-pill">👆 <span id="tap-display">1</span>/тап</div>
+    </div>
+    <div class="energy-row">
+      <div class="energy-head"><span>⚡ Энергия</span><span id="energy-text">100/100</span></div>
+      <div class="energy-track"><div class="energy-fill" id="energy-fill" style="width:100%"></div></div>
+    </div>
+  </div>
+
+  <!-- COIN ZONE (shown only on mine page) -->
+  <div class="coin-zone" id="coin-zone" style="display:none;">
+    <div class="boost-active-bar hidden" id="boost-active-bar">
+      <span id="boost-active-name">⚡ Буст активен</span>
+      <span class="boost-timer" id="boost-timer">30s</span>
+    </div>
+    <div class="combo-bar" id="combo-bar">COMBO x<span id="combo-val">1</span></div>
+    <div class="coin-outer">
+      <div class="coin-ring r1"></div>
+      <div class="coin-ring r2"></div>
+      <div class="coin-ring r3"></div>
+      <div class="coin skin-btc" id="main-coin" onclick="handleTap(event)">
+        <div class="coin-inner"></div>
+        <span class="coin-label" id="coin-label">₿</span>
+      </div>
+    </div>
+    <div class="tap-hint">▼ ТАП ЧТОБЫ МАЙНИТЬ ▼</div>
+  </div>
+
+  <!-- PAGES -->
+  <!-- MINE -->
+  <div class="page active" id="page-mine">
+    <div class="sec-head"><div class="sec-title">⚡ Апгрейды тапа</div></div>
+    <div class="card" id="tap-upgrades-list"></div>
+    <div class="sec-head"><div class="sec-title">⛏️ Пассивные майнеры</div></div>
+    <div class="card" id="miners-list"></div>
+  </div>
+
+  <!-- BOOSTS -->
+  <div class="page" id="page-boosts">
+    <div class="sec-head">
+      <div class="sec-title">🚀 Бусты</div>
+      <div class="sec-sub">Временные усилители</div>
+    </div>
+    <div class="boost-grid" id="boosts-grid"></div>
+
+    <div class="sec-head" style="margin-top:6px;"><div class="sec-title">📋 Квесты</div></div>
+    <div class="card" id="quests-list"></div>
+  </div>
+
+  <!-- SKINS -->
+  <div class="page" id="page-skins">
+    <div class="sec-head">
+      <div class="sec-title">🎨 Скины монеты</div>
+      <div class="sec-sub">Меняй внешний вид</div>
+    </div>
+    <div class="skin-grid" id="skins-grid"></div>
+    <div class="sec-head" style="margin-top:6px;"><div class="sec-title">🏅 Достижения</div></div>
+    <div class="ach-grid" id="ach-grid"></div>
+  </div>
+
+  <!-- LEADERS -->
+  <div class="page" id="page-leaders">
+    <div class="sec-head">
+      <div class="sec-title">🏆 Таблица лидеров</div>
+      <div class="sec-sub" id="leader-update">Обновлено только что</div>
+    </div>
+    <div class="card" id="leaders-list"></div>
+
+    <div class="sec-head" style="margin-top:6px;"><div class="sec-title">👥 Рефералы</div></div>
+    <div class="ref-card">
+      <div class="ref-title">Приглашай друзей 🤝</div>
+      <div class="ref-desc">За каждого друга ты получаешь <b style="color:var(--gold)">+5,000 монет</b>. Друг получает <b style="color:var(--accent)">+2,000 монет</b> на старте.</div>
+      <div class="ref-link-box" id="ref-link">t.me/CryptoMinerBot?start=ref_XXXXXXXX</div>
+      <div class="ref-actions">
+        <button class="ref-btn copy" onclick="copyRef()">📋 Копировать</button>
+        <button class="ref-btn share" onclick="shareRef()">📤 Поделиться</button>
+      </div>
+      <div class="ref-stats">
+        <div class="ref-stat"><div class="ref-stat-val" id="ref-count">0</div><div class="ref-stat-lbl">Друзей</div></div>
+        <div class="ref-stat"><div class="ref-stat-val" id="ref-earned">0</div><div class="ref-stat-lbl">Заработано</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TON -->
+  <div class="page" id="page-ton">
+    <div class="ton-card">
+      <div class="ton-logo">💎</div>
+      <div class="ton-title">TON Кошелёк</div>
+      <div class="ton-desc" id="ton-desc">Подключи TON кошелёк и выводи заработанные монеты. Курс: 1,000,000 монет = 1 TON</div>
+      <div class="ton-addr" id="ton-addr-display" style="display:none;"></div>
+      <button class="ton-connect-btn" id="ton-connect-btn" onclick="toggleTon()">🔗 Подключить кошелёк</button>
+      <div class="ton-exchange" id="ton-exchange" style="display:none;">
+        <div class="ton-exch-title">💱 Вывод монет</div>
+        <div class="ton-rate"><span>Курс обмена</span><span id="ton-rate">1,000,000 🪙 = 1 TON</span></div>
+        <div class="ton-rate"><span>Доступно</span><span id="ton-available">0 TON</span></div>
+        <div class="ton-withdraw-row">
+          <input class="ton-input" id="ton-amount" type="number" placeholder="Сумма в TON" min="0.1" step="0.1">
+          <button class="ton-withdraw-btn" onclick="withdrawTon()">ВЫВЕСТИ</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card glow-accent" style="padding:14px;">
+      <div class="sec-title" style="margin-bottom:10px;">📊 Статистика</div>
+      <div style="display:flex;flex-direction:column;gap:8px;" id="stats-list"></div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="nav">
+    <div class="nav-btn active" id="nav-mine" onclick="switchPage('mine',this)">
+      <div class="nav-icon-wrap"><span class="nav-icon">⛏️</span></div>
+      МАЙНИТЬ
+    </div>
+    <div class="nav-btn" id="nav-boosts" onclick="switchPage('boosts',this)">
+      <div class="nav-icon-wrap"><span class="nav-icon">🚀</span><div class="nav-badge" id="quest-badge" style="display:none;"></div></div>
+      ЗАДАНИЯ
+    </div>
+    <div class="nav-btn" id="nav-skins" onclick="switchPage('skins',this)">
+      <div class="nav-icon-wrap"><span class="nav-icon">🎨</span></div>
+      СКИНЫ
+    </div>
+    <div class="nav-btn" id="nav-leaders" onclick="switchPage('leaders',this)">
+      <div class="nav-icon-wrap"><span class="nav-icon">🏆</span></div>
+      ТОП
+    </div>
+    <div class="nav-btn" id="nav-ton" onclick="switchPage('ton',this)">
+      <div class="nav-icon-wrap"><span class="nav-icon">💎</span></div>
+      TON
+    </div>
+  </div>
+</div>
+
+<!-- LEVEL UP OVERLAY -->
+<div class="lvlup-overlay" id="lvlup-overlay" style="display:none;" onclick="closeLvlUp()">
+  <div class="lvlup-box" onclick="event.stopPropagation()">
+    <div class="lvlup-emoji">🎉</div>
+    <div class="lvlup-title">УРОВЕНЬ <span id="lvlup-num">2</span>!</div>
+    <div class="lvlup-sub" id="lvlup-sub">Новые возможности разблокированы</div>
+    <button class="lvlup-btn" onclick="closeLvlUp()">ПРОДОЛЖИТЬ</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// TELEGRAM INIT
+// ═══════════════════════════════════════════════
+const TG = window.Telegram?.WebApp || null;
+if(TG){ TG.ready(); TG.expand(); }
+
+function getTgUser(){
+  try{
+    const u = TG?.initDataUnsafe?.user;
+    if(u && u.id) return u;
+  }catch(e){}
+  return null;
+}
+
+// ═══════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════
+const SAVE_KEY = 'cm_v4';
+
+const LEVELS = [
+  {lvl:1, name:'Новичок',   need:0},
+  {lvl:2, name:'Майнер',    need:500},
+  {lvl:3, name:'Ветеран',   need:2000},
+  {lvl:4, name:'Профи',     need:8000},
+  {lvl:5, name:'Эксперт',   need:25000},
+  {lvl:6, name:'Мастер',    need:80000},
+  {lvl:7, name:'Легенда',   need:250000},
+  {lvl:8, name:'Гений',     need:800000},
+  {lvl:9, name:'Элита',     need:2500000},
+  {lvl:10,name:'Бог крипты',need:10000000},
+];
+
+// Апгрейды: каждый имеет свой тип эффекта
+const UPGRADES = [
+  {id:'u_tap1', name:'Турбо-пальцы',     icon:'🖐️', desc:'+2 к тапу за уровень',   maxLvl:10, base:80,    grow:2.8, type:'tap',    val:2},
+  {id:'u_tap2', name:'Кибер-перчатки',   icon:'🥊', desc:'+8 к тапу за уровень',   maxLvl:8,  base:600,   grow:3.2, type:'tap',    val:8},
+  {id:'u_tap3', name:'Нейро-чип',        icon:'🧠', desc:'+30 к тапу за уровень',  maxLvl:6,  base:5000,  grow:3.8, type:'tap',    val:30},
+  {id:'u_tap4', name:'Квантовый тап',    icon:'⚛️', desc:'+150 к тапу за уровень', maxLvl:5,  base:40000, grow:4.5, type:'tap',    val:150},
+  {id:'u_en1',  name:'Аккумулятор',      icon:'🔋', desc:'+100 энергии за уровень', maxLvl:10, base:200,   grow:2.5, type:'energy', val:100},
+  {id:'u_en2',  name:'Реактор',          icon:'⚡', desc:'+500 энергии за уровень', maxLvl:6,  base:3000,  grow:3.5, type:'energy', val:500},
+  {id:'u_mul',  name:'Мультипликатор',   icon:'✨', desc:'x2 ко всему доходу',     maxLvl:4,  base:15000, grow:8,   type:'multi',  val:2},
+  {id:'u_pas',  name:'Авто-майнер Pro',  icon:'🤖', desc:'+5/сек пассивно за ур.', maxLvl:8,  base:1000,  grow:3,   type:'passive',val:5},
+];
+
+const MINERS = [
+  {id:'m1', name:'GPU карта',          icon:'🖥️', base:120,     grow:1.15, rate:0.5},
+  {id:'m2', name:'ASIC майнер',        icon:'⚙️', base:600,     grow:1.15, rate:3},
+  {id:'m3', name:'Крипто ферма',       icon:'🏭', base:2500,    grow:1.15, rate:15},
+  {id:'m4', name:'Дата центр',         icon:'🌐', base:12000,   grow:1.15, rate:80},
+  {id:'m5', name:'Квантовый PC',       icon:'🔮', base:60000,   grow:1.15, rate:500},
+  {id:'m6', name:'Лунный сервер',      icon:'🌙', base:350000,  grow:1.15, rate:3500},
+  {id:'m7', name:'Орбит. станция',     icon:'🛸', base:2000000, grow:1.15, rate:25000},
+];
+
+const BOOSTS = [
+  {id:'b1', name:'Двойной тап',  icon:'👆', desc:'x2 тап / 30с',     dur:30,  mult:2,   cd:300,  cost:0, instant:0, energy:false},
+  {id:'b2', name:'Авто-тап',     icon:'🤖', desc:'10 тапов/с / 20с',  dur:20,  auto:10,  cd:600,  cost:0, instant:0, energy:false},
+  {id:'b3', name:'Суперзаряд',   icon:'⚡', desc:'x5 тап / 15с',      dur:15,  mult:5,   cd:1800, cost:5000, instant:0, energy:false},
+  {id:'b4', name:'Золотой дождь',icon:'🌧️', desc:'+1000 монет сразу', dur:0,   mult:1,   cd:3600, cost:0, instant:1000, energy:false},
+  {id:'b5', name:'Энергия 100%', icon:'🔋', desc:'Заряжает энергию',  dur:0,   mult:1,   cd:900,  cost:0, instant:0, energy:true},
+  {id:'b6', name:'Крипто-шторм', icon:'🌪️', desc:'x10 тап / 10с',    dur:10,  mult:10,  cd:7200, cost:50000, instant:0, energy:false},
+];
+
+const QUESTS = [
+  {id:'q1', name:'Первые шаги',    icon:'👣', type:'taps',    target:100,     reward:500,   daily:false},
+  {id:'q2', name:'Кликер',         icon:'🖱️', type:'taps',    target:1000,    reward:3000,  daily:false},
+  {id:'q3', name:'Миллионер',      icon:'💰', type:'earned',  target:1000000, reward:50000, daily:false},
+  {id:'q4', name:'Фермер',         icon:'🌾', type:'miners',  target:5,       reward:10000, daily:false},
+  {id:'q5', name:'Дневной тап',    icon:'📅', type:'tapday',  target:500,     reward:2000,  daily:true},
+  {id:'q6', name:'Дневная добыча', icon:'☀️', type:'earnday', target:10000,   reward:5000,  daily:true},
+  {id:'q7', name:'Апгрейдер',      icon:'⬆️', type:'upgcnt',  target:10,      reward:20000, daily:false},
+  {id:'q8', name:'Энерго-марафон', icon:'⚡', type:'enspent', target:2000,    reward:15000, daily:false},
+];
+
+const SKINS = [
+  {id:'btc', name:'Bitcoin',  icon:'₿', cls:'skin-btc', need:1},
+  {id:'eth', name:'Ethereum', icon:'Ξ', cls:'skin-eth', need:2},
+  {id:'ton', name:'TON',      icon:'💎',cls:'skin-ton', need:3},
+  {id:'doge',name:'Dogecoin', icon:'Ð', cls:'skin-doge',need:4},
+  {id:'sol', name:'Solana',   icon:'◎', cls:'skin-sol', need:6},
+  {id:'xrp', name:'XRP',      icon:'✕', cls:'skin-xrp', need:8},
+];
+
+const ACHS = [
+  {id:'a1', name:'Первый тап',   icon:'👆', desc:'1 тап',         ok:s=>s.taps>=1},
+  {id:'a2', name:'Кликер',       icon:'🖱️', desc:'1 000 тапов',   ok:s=>s.taps>=1000},
+  {id:'a3', name:'Тап-бог',      icon:'👑', desc:'100К тапов',    ok:s=>s.taps>=100000},
+  {id:'a4', name:'Первые монеты',icon:'🪙', desc:'100 монет',     ok:s=>s.earned>=100},
+  {id:'a5', name:'Богач',        icon:'💰', desc:'1М монет',      ok:s=>s.earned>=1000000},
+  {id:'a6', name:'Миллиардер',   icon:'💎', desc:'1B монет',      ok:s=>s.earned>=1e9},
+  {id:'a7', name:'Фермер',       icon:'⛏️', desc:'5 майнеров',    ok:s=>Object.values(s.miners).filter(v=>v>0).length>=5},
+  {id:'a8', name:'Ветеран',      icon:'⭐', desc:'Уровень 5',     ok:s=>s.lvl>=5},
+];
+
+const FAKE_LB = [
+  {name:'CryptoKing_88',  ava:'👑', score:9823456, lvl:10},
+  {name:'BitcoinMaster',  ava:'₿',  score:7234100, lvl:9},
+  {name:'MoonFarmer',     ava:'🌙', score:5890000, lvl:9},
+  {name:'SatoshiBot',     ava:'🤖', score:4120000, lvl:8},
+  {name:'ETH_Whale',      ava:'🐋', score:3456000, lvl:8},
+  {name:'DiamondHands',   ava:'💎', score:2890000, lvl:7},
+  {name:'HODLer_Pro',     ava:'🚀', score:1234000, lvl:7},
+  {name:'DeFi_Master',    ava:'⚡', score:890000,  lvl:6},
+  {name:'BlockchainGuru', ava:'🔗', score:456000,  lvl:5},
+];
+
+// ═══════════════════════════════════════════════
+// STATE — одна структура, всё в ней
+// ═══════════════════════════════════════════════
+function defaultState(){
+  return {
+    // деньги
+    balance:  0,
+    earned:   0,  // всего заработано (для уровня)
+    taps:     0,
+    // апгрейды: {u_tap1: 3, u_en1: 2, ...}
+    upg:      {},
+    // майнеры: {m1: 5, m2: 2, ...}
+    miners:   {},
+    // энергия
+    energy:   100,
+    // бусты: {b1: {cdEnd: 1234567890, activeEnd: 0}}
+    boosts:   {},
+    activeBoost: null,  // id активного буста
+    boostEnd:    0,
+    // квесты: {q1: 'done'|'claimed'}
+    quests:   {},
+    // дейли прогресс
+    tapDay:   0,
+    earnDay:  0,
+    enSpent:  0,
+    upgCnt:   0,
+    dayStr:   '',
+    // скины
+    skin:     'btc',
+    // ton
+    ton:      {addr:'', withdrawn:0},
+    tonOk:    false,
+    // рефералы
+    refs:     0,
+    refEarn:  0,
+    // уровень (кешируем)
+    lvl:      1,
+    // время последнего сохранения (для офлайн-дохода)
+    savedAt:  Date.now(),
+  };
+}
+
+let S = defaultState();
+
+// ═══════════════════════════════════════════════
+// ВЫЧИСЛЯЕМЫЕ ЗНАЧЕНИЯ
+// ═══════════════════════════════════════════════
+
+// Стоимость апгрейда (текущего следующего уровня)
+function upgCost(u){
+  const lvl = S.upg[u.id] || 0;
+  return Math.floor(u.base * Math.pow(u.grow, lvl));
+}
+
+// Стоимость майнера
+function minerCost(m){
+  const cnt = S.miners[m.id] || 0;
+  return Math.floor(m.base * Math.pow(m.grow, cnt));
+}
+
+// Сила одного тапа
+function tapPower(){
+  let p = 1;
+  for(const u of UPGRADES){
+    if(u.type === 'tap'){
+      p += (S.upg[u.id] || 0) * u.val;
+    }
+  }
+  const multi = getMulti();
+  let m = multi;
+  // активный буст
+  if(S.activeBoost && Date.now() < S.boostEnd){
+    const b = BOOSTS.find(x => x.id === S.activeBoost);
+    if(b && b.mult > 1) m *= b.mult;
+  }
+  // комбо
+  const cc = Math.min(combo, 10);
+  if(cc > 1) m *= (1 + (cc-1) * 0.1);
+  return Math.max(1, Math.floor(p * m));
+}
+
+// Пассивный доход в секунду
+function passiveRate(){
+  let r = 0;
+  // от майнеров
+  for(const m of MINERS) r += (S.miners[m.id] || 0) * m.rate;
+  // от апгрейда пассивного майнера
+  r += (S.upg['u_pas'] || 0) * UPGRADES.find(u=>u.id==='u_pas').val;
+  // мультипликатор
+  r *= getMulti();
+  // активный буст
+  if(S.activeBoost && Date.now() < S.boostEnd){
+    const b = BOOSTS.find(x => x.id === S.activeBoost);
+    if(b && b.mult > 1) r *= b.mult;
+  }
+  return r;
+}
+
+// Мультипликатор от апгрейда
+function getMulti(){
+  const lvl = S.upg['u_mul'] || 0;
+  return lvl > 0 ? Math.pow(2, lvl) : 1;
+}
+
+// Макс энергия
+function maxEnergy(){
+  let e = 100;
+  e += (S.upg['u_en1'] || 0) * 100;
+  e += (S.upg['u_en2'] || 0) * 500;
+  return e;
+}
+
+// Текущий уровень
+function getLevel(){
+  for(let i = LEVELS.length-1; i >= 0; i--){
+    if(S.earned >= LEVELS[i].need) return LEVELS[i];
+  }
+  return LEVELS[0];
+}
+
+// Прогресс квеста
+function questProg(q){
+  switch(q.type){
+    case 'taps':    return Math.min(S.taps,    q.target);
+    case 'earned':  return Math.min(S.earned,  q.target);
+    case 'miners':  return Math.min(Object.values(S.miners).filter(v=>v>0).length, q.target);
+    case 'upgcnt':  return Math.min(S.upgCnt||0, q.target);
+    case 'tapday':  return Math.min(S.tapDay||0, q.target);
+    case 'earnday': return Math.min(S.earnDay||0, q.target);
+    case 'enspent': return Math.min(S.enSpent||0, q.target);
+    default: return 0;
+  }
+}
+
+// ═══════════════════════════════════════════════
+// COMBO
+// ═══════════════════════════════════════════════
+let combo = 0, comboTimer = null;
+
+function resetCombo(){ combo = 0; updateComboUI(); }
+function bumpCombo(){
+  combo++;
+  clearTimeout(comboTimer);
+  comboTimer = setTimeout(resetCombo, 1500);
+  updateComboUI();
+}
+function updateComboUI(){
+  const bar = document.getElementById('combo-bar');
+  if(!bar) return;
+  document.getElementById('combo-val').textContent = combo;
+  bar.classList.toggle('visible', combo > 1);
+}
+
+// ═══════════════════════════════════════════════
+// TAP
+// ═══════════════════════════════════════════════
+function handleTap(e){
+  if(Math.floor(S.energy) < 1){
+    showNotif('⚡ Нет энергии!');
+    return;
+  }
+  const p = tapPower();
+  S.balance  += p;
+  S.earned   += p;
+  S.taps     ++;
+  S.energy    = Math.max(0, S.energy - 1);
+  S.tapDay   = (S.tapDay  || 0) + 1;
+  S.earnDay  = (S.earnDay || 0) + p;
+  S.enSpent  = (S.enSpent || 0) + 1;
+
+  bumpCombo();
+  spawnFloat(e.clientX, e.clientY, '+' + fmt(p));
+
+  const coin = document.getElementById('main-coin');
+  coin.classList.remove('pop');
+  void coin.offsetWidth;
+  coin.classList.add('pop');
+  setTimeout(() => coin.classList.remove('pop'), 180);
+
+  updateHUD();
+  checkLevelUp();
+  // помечаем что списки надо перерисовать (доступность кнопок изменилась)
+  dirty.upg = true;
+  dirty.miners = true;
+  dirty.quests = true;
+}
+
+// ═══════════════════════════════════════════════
+// АПГРЕЙДЫ
+// ═══════════════════════════════════════════════
+function buyUpgrade(id){
+  const u = UPGRADES.find(x => x.id === id);
+  if(!u){ showNotif('Апгрейд не найден'); return; }
+  const lvl = S.upg[id] || 0;
+  if(lvl >= u.maxLvl){ showNotif('🔒 Максимальный уровень!'); return; }
+  const cost = upgCost(u);
+  if(S.balance < cost){
+    showNotif('❌ Нужно: ' + fmt(cost) + ' монет (у тебя ' + fmt(S.balance) + ')');
+    return;
+  }
+  S.balance -= cost;
+  S.upg[id]  = lvl + 1;
+  S.upgCnt   = (S.upgCnt || 0) + 1;
+  showNotif('✅ ' + u.name + ' → Ур.' + (lvl+1));
+  dirty.upg = true; dirty.miners = true; dirty.quests = true; dirty.stats = true;
+  updateHUD();
+  renderDirty();
+}
+
+// ═══════════════════════════════════════════════
+// МАЙНЕРЫ
+// ═══════════════════════════════════════════════
+function buyMiner(id){
+  const m = MINERS.find(x => x.id === id);
+  if(!m){ showNotif('Майнер не найден'); return; }
+  const cost = minerCost(m);
+  if(S.balance < cost){
+    showNotif('❌ Нужно: ' + fmt(cost) + ' монет');
+    return;
+  }
+  S.balance   -= cost;
+  S.miners[id] = (S.miners[id] || 0) + 1;
+  showNotif('⛏️ ' + m.name + ' x' + S.miners[id]);
+  dirty.miners = true; dirty.upg = true; dirty.quests = true; dirty.stats = true;
+  updateHUD();
+  renderDirty();
+}
+
+// ═══════════════════════════════════════════════
+// БУСТЫ
+// ═══════════════════════════════════════════════
+let autoTapIv = null;
+
+function activateBoost(id){
+  const b = BOOSTS.find(x => x.id === id);
+  if(!b) return;
+  const now = Date.now();
+  const bs = S.boosts[id] || {};
+  const cdEnd = bs.cdEnd || 0;
+  if(now < cdEnd){
+    showNotif('⏳ Кулдаун: ' + fmtTime((cdEnd - now)/1000));
+    return;
+  }
+  if(b.cost > 0 && S.balance < b.cost){
+    showNotif('❌ Нужно ' + fmt(b.cost) + ' монет');
+    return;
+  }
+  if(b.cost > 0) S.balance -= b.cost;
+
+  // применяем эффект
+  if(b.energy){
+    S.energy = maxEnergy();
+    showNotif('🔋 Энергия восстановлена!');
+  } else if(b.instant > 0){
+    S.balance += b.instant; S.earned += b.instant;
+    showNotif('🌧️ +' + fmt(b.instant) + ' монет!');
+  } else if(b.auto > 0){
+    // авто-тап
+    startAutoTap(b, now);
+    showNotif('🤖 Авто-тап на ' + b.dur + 'с!');
+  } else if(b.dur > 0){
+    S.activeBoost = id;
+    S.boostEnd    = now + b.dur * 1000;
+    updateBoostBar();
+    showNotif(b.icon + ' ' + b.name + ' активирован!');
+  }
+
+  S.boosts[id] = { cdEnd: now + b.cd * 1000 };
+  dirty.boosts = true;
+  updateHUD();
+  renderDirty();
+}
+
+function startAutoTap(b, now){
+  if(autoTapIv) clearInterval(autoTapIv);
+  S.activeBoost = b.id;
+  S.boostEnd    = now + b.dur * 1000;
+  updateBoostBar();
+  autoTapIv = setInterval(() => {
+    if(Date.now() >= S.boostEnd){
+      clearInterval(autoTapIv); autoTapIv = null;
+      S.activeBoost = null;
+      updateBoostBar(); dirty.boosts = true; renderDirty(); return;
+    }
+    const p = tapPower() * b.auto;
+    S.balance += p; S.earned += p; S.taps += b.auto;
+    spawnFloatCenter('+' + fmt(p));
+    updateHUD();
+  }, 1000);
+}
+
+function updateBoostBar(){
+  const bar  = document.getElementById('boost-active-bar');
+  if(!bar) return;
+  if(S.activeBoost && Date.now() < S.boostEnd){
+    const b = BOOSTS.find(x => x.id === S.activeBoost);
+    document.getElementById('boost-active-name').textContent = b ? b.icon+' '+b.name : '⚡ Буст';
+    bar.classList.remove('hidden');
+  } else {
+    bar.classList.add('hidden');
+    if(S.activeBoost && Date.now() >= S.boostEnd) S.activeBoost = null;
+  }
+}
+
+// ═══════════════════════════════════════════════
+// КВЕСТЫ
+// ═══════════════════════════════════════════════
+function claimQuest(id){
+  const q = QUESTS.find(x => x.id === id);
+  if(!q) return;
+  if(S.quests[id] === 'claimed'){ showNotif('✅ Уже получено!'); return; }
+  const prog = questProg(q);
+  if(prog < q.target){
+    showNotif('⏳ ' + fmt(prog) + ' / ' + fmt(q.target));
+    return;
+  }
+  S.balance += q.reward;
+  S.earned  += q.reward;
+  S.quests[id] = 'claimed';
+  showNotif('🎁 +' + fmt(q.reward) + ' монет!');
+  dirty.quests = true; dirty.stats = true;
+  updateHUD();
+  renderDirty();
+}
+
+function checkQuestBadge(){
+  const has = QUESTS.some(q => S.quests[q.id] !== 'claimed' && questProg(q) >= q.target);
+  const badge = document.getElementById('quest-badge');
+  if(badge) badge.style.display = has ? 'block' : 'none';
+}
+
+function resetDailyIfNeeded(){
+  const today = new Date().toDateString();
+  if(S.dayStr !== today){
+    S.dayStr  = today;
+    S.tapDay  = 0;
+    S.earnDay = 0;
+    QUESTS.forEach(q => {
+      if(q.daily && S.quests[q.id] === 'claimed') delete S.quests[q.id];
+    });
+    dirty.quests = true;
+  }
+}
+
+// ═══════════════════════════════════════════════
+// СКИНЫ
+// ═══════════════════════════════════════════════
+function selectSkin(id){
+  const sk = SKINS.find(x => x.id === id);
+  if(!sk) return;
+  if(S.lvl < sk.need){ showNotif('🔒 Нужен уровень ' + sk.need); return; }
+  S.skin = id;
+  applySkin();
+  showNotif('🎨 Скин ' + sk.name + ' применён!');
+  dirty.skins = true; renderDirty();
+}
+
+function applySkin(){
+  const coin = document.getElementById('main-coin');
+  const sk   = SKINS.find(x => x.id === S.skin) || SKINS[0];
+  SKINS.forEach(s => coin.classList.remove(s.cls));
+  coin.classList.add(sk.cls);
+  const lbl = document.getElementById('coin-label');
+  const ico = document.getElementById('bal-icon');
+  if(lbl) lbl.textContent = sk.icon;
+  if(ico) ico.textContent = sk.icon;
+}
+
+// ═══════════════════════════════════════════════
+// TON
+// ═══════════════════════════════════════════════
+function toggleTon(){
+  if(S.tonOk){
+    S.tonOk  = false;
+    S.ton.addr = '';
+    showNotif('💎 Кошелёк отключён');
+  } else {
+    S.tonOk    = true;
+    S.ton.addr = 'UQB...' + Math.random().toString(36).slice(2,8).toUpperCase();
+    showNotif('✅ TON кошелёк подключён!');
+  }
+  updateTonUI(); saveGame();
+}
+function openTonPage(){ switchPage('ton', document.getElementById('nav-ton')); }
+
+function updateTonUI(){
+  const btn      = document.getElementById('ton-connect-btn');
+  const addrEl   = document.getElementById('ton-addr-display');
+  const exchEl   = document.getElementById('ton-exchange');
+  const descEl   = document.getElementById('ton-desc');
+  const topBtn   = document.getElementById('ton-btn');
+  const availEl  = document.getElementById('ton-available');
+  if(!btn) return;
+  if(S.tonOk){
+    btn.textContent = '🔓 Отключить';
+    if(addrEl){ addrEl.textContent = S.ton.addr; addrEl.style.display = 'block'; }
+    if(exchEl)  exchEl.style.display = 'block';
+    if(descEl)  descEl.textContent = 'Кошелёк подключён. Выводи монеты!';
+    if(topBtn){ topBtn.classList.add('connected'); topBtn.textContent = '✅ TON'; }
+    if(availEl) availEl.textContent = (S.balance/1000000).toFixed(2) + ' TON';
+  } else {
+    btn.textContent = '🔗 Подключить кошелёк';
+    if(addrEl)  addrEl.style.display = 'none';
+    if(exchEl)  exchEl.style.display = 'none';
+    if(descEl)  descEl.textContent = 'Подключи TON кошелёк. Курс: 1 000 000 монет = 1 TON';
+    if(topBtn){ topBtn.classList.remove('connected'); topBtn.textContent = '💎 TON'; }
+  }
+}
+
+function withdrawTon(){
+  if(!S.tonOk){ showNotif('❌ Сначала подключи кошелёк!'); return; }
+  const inp    = document.getElementById('ton-amount');
+  const amount = parseFloat(inp.value) || 0;
+  if(amount <= 0){ showNotif('❌ Введи сумму'); return; }
+  const cost = amount * 1000000;
+  if(S.balance < cost){ showNotif('❌ Нужно ' + fmt(cost) + ' монет'); return; }
+  S.balance      -= cost;
+  S.ton.withdrawn = (S.ton.withdrawn || 0) + amount;
+  inp.value = '';
+  showNotif('💎 Выведено ' + amount.toFixed(2) + ' TON!');
+  dirty.stats = true; updateHUD(); renderDirty();
+}
+
+// ═══════════════════════════════════════════════
+// РЕФЕРАЛЫ
+// ═══════════════════════════════════════════════
+function copyRef(){
+  const el = document.getElementById('ref-link');
+  if(el && navigator.clipboard) navigator.clipboard.writeText(el.textContent);
+  showNotif('📋 Ссылка скопирована!');
+}
+function shareRef(){
+  const link = document.getElementById('ref-link')?.textContent || '';
+  const text = '⛏️ CryptoMiner Pro — тапай и зарабатывай! +2000 монет на старт!\n' + link;
+  if(TG?.openTelegramLink){
+    TG.openTelegramLink('https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(text));
+  } else if(navigator.share){
+    navigator.share({title:'CryptoMiner Pro', text, url:link});
+  } else {
+    showNotif('📤 Скопируй ссылку!');
+  }
+}
+
+// ═══════════════════════════════════════════════
+// LEVEL UP
+// ═══════════════════════════════════════════════
+let shownLvl = 1;
+function checkLevelUp(){
+  const lv = getLevel();
+  S.lvl = lv.lvl;
+  if(lv.lvl > shownLvl){
+    shownLvl = lv.lvl;
+    document.getElementById('lvlup-num').textContent = lv.lvl;
+    const sk = SKINS.find(s => s.need === lv.lvl);
+    document.getElementById('lvlup-sub').textContent =
+      'Ты стал: ' + lv.name + (sk ? ' • Разблокирован скин ' + sk.name + '!' : '');
+    document.getElementById('lvlup-overlay').style.display = 'flex';
+    dirty.skins = true; dirty.ach = true;
+  }
+}
+function closeLvlUp(){ document.getElementById('lvlup-overlay').style.display = 'none'; }
+
+// ═══════════════════════════════════════════════
+// HUD — быстрое обновление цифр без пересоздания DOM
+// ═══════════════════════════════════════════════
+function updateHUD(){
+  const pr   = passiveRate();
+  const tp   = tapPower();
+  const lv   = getLevel();
+  const maxE = maxEnergy();
+  S.lvl      = lv.lvl;
+
+  setText('balance-display', fmt(S.balance));
+  setText('passive-display', pr.toFixed(1));
+  setText('tap-display',     fmt(tp));
+  setText('tb-level', 'УРОВЕНЬ ' + lv.lvl + ' · ' + lv.name.toUpperCase());
+
+  const ep = Math.min(S.energy / maxE * 100, 100);
+  setStyle('energy-fill', 'width', ep.toFixed(1) + '%');
+  setText('energy-text', Math.floor(S.energy) + '/' + maxE);
+
+  // буст-таймер
+  if(S.activeBoost && Date.now() < S.boostEnd){
+    setText('boost-timer', fmtTime((S.boostEnd - Date.now()) / 1000));
+  } else if(S.activeBoost){
+    S.activeBoost = null; updateBoostBar(); dirty.boosts = true;
+  }
+
+  checkQuestBadge();
+}
+
+function setText(id, val){
+  const el = document.getElementById(id);
+  if(el && el.textContent !== val) el.textContent = val;
+}
+function setStyle(id, prop, val){
+  const el = document.getElementById(id);
+  if(el) el.style[prop] = val;
+}
+
+// ═══════════════════════════════════════════════
+// DIRTY FLAGS + LAZY RENDER
+// ═══════════════════════════════════════════════
+const dirty = { upg:true, miners:true, boosts:true, quests:true, skins:true, ach:true, lb:true, stats:true };
+
+function markAllDirty(){ Object.keys(dirty).forEach(k => dirty[k] = true); }
+
+function renderDirty(){
+  if(dirty.upg)    { renderUpgrades();     dirty.upg    = false; }
+  if(dirty.miners) { renderMiners();       dirty.miners = false; }
+  if(dirty.boosts) { renderBoosts();       dirty.boosts = false; }
+  if(dirty.quests) { renderQuests();       dirty.quests = false; }
+  if(dirty.skins)  { renderSkins();        dirty.skins  = false; }
+  if(dirty.ach)    { renderAch();          dirty.ach    = false; }
+  if(dirty.lb)     { renderLeaders();      dirty.lb     = false; }
+  if(dirty.stats)  { renderStats(); updateTonUI(); dirty.stats = false; }
+  // реф-ссылка
+  const uid = getTgUser()?.id || '00000000';
+  setText('ref-link',  't.me/CryptoMinerBot?start=ref_' + uid);
+  setText('ref-count', String(S.refs));
+  setText('ref-earned', fmt(S.refEarn));
+}
+
+// ═══════════════════════════════════════════════
+// RENDER FUNCTIONS
+// ═══════════════════════════════════════════════
+function mkEl(tag, cls, html){
+  const el = document.createElement(tag);
+  if(cls) el.className = cls;
+  if(html !== undefined) el.innerHTML = html;
+  return el;
+}
+
+function renderUpgrades(){
+  const wrap = document.getElementById('tap-upgrades-list');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  for(const u of UPGRADES){
+    const lvl   = S.upg[u.id] || 0;
+    const cost  = upgCost(u);
+    const maxed = lvl >= u.maxLvl;
+    const can   = !maxed && S.balance >= cost;
+    const pct   = (lvl / u.maxLvl * 100).toFixed(0);
+
+    const div = mkEl('div', 'upg-item' + (maxed ? ' maxed' : can ? ' can-buy' : ''));
+    div.innerHTML = `
+      <div class="upg-icon">${u.icon}</div>
+      <div class="upg-body">
+        <div class="upg-name">${u.name}</div>
+        <div class="upg-desc">${u.desc}</div>
+        <div class="upg-prog"><div class="upg-bar" style="width:${pct}%"></div></div>
+      </div>
+      <div class="upg-right">
+        ${maxed
+          ? '<div class="upg-maxed">✅ МАКС</div>'
+          : `<div class="upg-cost">${fmt(cost)}</div><div class="upg-lvl">Ур.${lvl}/${u.maxLvl}</div>`}
+      </div>`;
+
+    if(!maxed){
+      const uid = u.id;
+      div.addEventListener('click', () => buyUpgrade(uid));
+    }
+    wrap.appendChild(div);
+  }
+}
+
+function renderMiners(){
+  const wrap = document.getElementById('miners-list');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  for(const m of MINERS){
+    const cnt  = S.miners[m.id] || 0;
+    const cost = minerCost(m);
+    const can  = S.balance >= cost;
+
+    const div = mkEl('div', 'miner-item' + (can ? ' can-buy' : ''));
+    div.innerHTML = `
+      <div class="miner-icon">${m.icon}</div>
+      <div class="miner-body">
+        <div class="miner-name">${m.name}</div>
+        <div class="miner-rate">+${m.rate}/сек · итого: ${(cnt * m.rate).toFixed(1)}/сек</div>
+        <div class="miner-cost">${fmt(cost)} монет</div>
+      </div>
+      <div class="miner-right">
+        <div class="miner-count">${cnt}</div>
+        <div style="font-size:9px;color:rgba(255,255,255,.25)">куплено</div>
+      </div>`;
+
+    const mid = m.id;
+    div.addEventListener('click', () => buyMiner(mid));
+    wrap.appendChild(div);
+  }
+}
+
+function renderBoosts(){
+  const wrap = document.getElementById('boosts-grid');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  const now = Date.now();
+  for(const b of BOOSTS){
+    const bs     = S.boosts[b.id] || {};
+    const cdEnd  = bs.cdEnd || 0;
+    const onCd   = now < cdEnd;
+    const active = S.activeBoost === b.id && now < S.boostEnd;
+
+    const div = mkEl('div', 'boost-card' + (active ? ' active-boost' : onCd ? ' on-cooldown' : ''));
+    const cdTxt = onCd ? fmtTime((cdEnd-now)/1000) : '';
+    div.innerHTML = `
+      <div class="boost-icon">${b.icon}</div>
+      <div class="boost-name">${b.name}</div>
+      <div class="boost-desc">${b.desc}</div>
+      ${b.cost === 0 ? '<div class="boost-free-tag">FREE</div>' : ''}
+      <div class="boost-btn">${active ? 'АКТИВЕН' : onCd ? 'КД: '+cdTxt : b.cost>0 ? fmt(b.cost)+' 🪙' : 'АКТИВИРОВАТЬ'}</div>
+      ${onCd && !active ? '<div class="boost-cd">' + cdTxt + '</div>' : ''}`;
+
+    if(!onCd && !active){
+      const bid = b.id;
+      div.addEventListener('click', () => activateBoost(bid));
+    }
+    wrap.appendChild(div);
+  }
+}
+
+function renderQuests(){
+  const wrap = document.getElementById('quests-list');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  for(const q of QUESTS){
+    const prog    = questProg(q);
+    const pct     = Math.min(prog / q.target * 100, 100).toFixed(0);
+    const claimed = S.quests[q.id] === 'claimed';
+    const done    = prog >= q.target && !claimed;
+
+    const div = mkEl('div', 'quest-item');
+    div.innerHTML = `
+      <div class="quest-icon">${q.icon}</div>
+      <div class="quest-body">
+        <div class="quest-name">${q.name}${q.daily ? ' <span class="tag tag-new">ДЕНЬ</span>' : ''}</div>
+        <div class="quest-prog-row">
+          <div class="quest-track"><div class="quest-fill" style="width:${pct}%"></div></div>
+          <div class="quest-pct">${fmt(prog)}/${fmt(q.target)}</div>
+        </div>
+      </div>`;
+
+    const btn = mkEl('div', 'quest-reward' + (done ? ' done' : claimed ? ' claimed' : ''));
+    btn.textContent = claimed ? '✅ Получено' : done ? '🎁 Забрать' : '+' + fmt(q.reward);
+    if(done){
+      const qid = q.id;
+      btn.addEventListener('click', (e) => { e.stopPropagation(); claimQuest(qid); });
+    }
+    div.appendChild(btn);
+    wrap.appendChild(div);
+  }
+}
+
+function renderSkins(){
+  const wrap = document.getElementById('skins-grid');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  for(const sk of SKINS){
+    const unlocked = S.lvl >= sk.need;
+    const active   = S.skin === sk.id;
+
+    const div = mkEl('div', 'skin-card' + (active ? ' active' : !unlocked ? ' locked' : ''));
+    div.innerHTML = `
+      ${!unlocked ? '<div class="skin-lock-icon">🔒</div>' : ''}
+      ${active    ? '<div class="skin-active-tag">ACTIVE</div>' : ''}
+      <div class="skin-preview">${sk.icon}</div>
+      <div class="skin-name">${sk.name}</div>
+      <div class="skin-unlock">${unlocked ? 'Разблокировано' : 'Уровень '+sk.need}</div>`;
+
+    const sid = sk.id;
+    div.addEventListener('click', () => selectSkin(sid));
+    wrap.appendChild(div);
+  }
+}
+
+function renderAch(){
+  const wrap = document.getElementById('ach-grid');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  for(const a of ACHS){
+    const ok = a.ok(S);
+    const div = mkEl('div', 'ach-card' + (ok ? ' unlocked' : ''));
+    div.innerHTML = `<div class="ach-card-icon">${a.icon}</div><div class="ach-card-name">${a.name}</div><div class="ach-card-desc">${ok ? '🏅 Получено!' : a.desc}</div>`;
+    wrap.appendChild(div);
+  }
+}
+
+function renderLeaders(){
+  const wrap = document.getElementById('leaders-list');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  const tgU = getTgUser();
+  const myName = tgU ? tgU.first_name : 'Ты';
+  const all = [...FAKE_LB, {name:myName, ava:'🧑', score:Math.floor(S.earned), lvl:S.lvl, isMe:true}];
+  all.sort((a,b) => b.score - a.score);
+  all.slice(0,10).forEach((p, i) => {
+    const rank = i + 1;
+    const rc   = rank===1 ? 'gold' : rank===2 ? 'silver' : rank===3 ? 'bronze' : '';
+    const bgs  = ['rgba(0,229,255,.1)','rgba(124,58,237,.1)','rgba(0,255,136,.1)','rgba(255,59,92,.1)','rgba(255,215,0,.1)'];
+    const div  = mkEl('div', 'leader-item' + (p.isMe ? ' is-me' : ''));
+    div.innerHTML = `
+      <div class="leader-rank ${rc}">${rank<=3 ? ['🥇','🥈','🥉'][rank-1] : rank}</div>
+      <div class="leader-ava" style="background:${bgs[rank%5]}">${p.ava}</div>
+      <div class="leader-body">
+        <div class="leader-name">${p.name}${p.isMe?' (Ты)':''}</div>
+        <div class="leader-sub">Уровень ${p.lvl}</div>
+      </div>
+      <div class="leader-score">${fmt(p.score)}</div>`;
+    wrap.appendChild(div);
+  });
+}
+
+function renderStats(){
+  const wrap = document.getElementById('stats-list');
+  if(!wrap) return;
+  const rows = [
+    ['💰 Всего заработано', fmt(S.earned) + ' монет'],
+    ['👆 Всего тапов',      fmt(S.taps)],
+    ['⛏️ Пассивный доход',  passiveRate().toFixed(2) + '/сек'],
+    ['🎯 Сила тапа',        fmt(tapPower()) + '/тап'],
+    ['⚡ Макс энергия',     maxEnergy() + ' ед.'],
+    ['🏅 Уровень',          S.lvl + ' — ' + getLevel().name],
+    ['💎 TON выведено',     (S.ton.withdrawn||0).toFixed(2) + ' TON'],
+    ['👥 Рефералов',        String(S.refs)],
+  ];
+  wrap.innerHTML = rows.map(([l,v]) => `
+    <div style="display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid var(--border);">
+      <span style="color:rgba(255,255,255,.4)">${l}</span>
+      <span style="font-weight:700;font-family:'Orbitron',monospace;font-size:11px">${v}</span>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+let curPage = 'mine';
+function switchPage(name, btn){
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  btn.classList.add('active');
+  const cz = document.getElementById('coin-zone');
+  if(cz) cz.style.display = name === 'mine' ? 'flex' : 'none';
+  curPage = name;
+  renderDirty();
+}
+
+// ═══════════════════════════════════════════════
+// FLOATERS
+// ═══════════════════════════════════════════════
+function spawnFloat(x, y, text){
+  const el = document.createElement('div');
+  el.className = 'floater';
+  el.textContent = text;
+  el.style.left = (x - 24) + 'px';
+  el.style.top  = (y - 24) + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 900);
+}
+function spawnFloatCenter(text){
+  const cz = document.getElementById('coin-zone');
+  if(!cz) return;
+  const r = cz.getBoundingClientRect();
+  spawnFloat(r.left + r.width/2, r.top + r.height/2, text);
+}
+
+// ═══════════════════════════════════════════════
+// NOTIFICATION
+// ═══════════════════════════════════════════════
+function showNotif(msg){
+  document.querySelectorAll('.notif').forEach(n => n.remove());
+  const el = document.createElement('div');
+  el.className = 'notif';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2500);
+}
+
+// ═══════════════════════════════════════════════
+// ФОРМАТИРОВАНИЕ
+// ═══════════════════════════════════════════════
+function fmt(n){
+  n = Math.floor(n);
+  if(n >= 1e12) return (n/1e12).toFixed(2) + 'T';
+  if(n >= 1e9)  return (n/1e9).toFixed(2)  + 'B';
+  if(n >= 1e6)  return (n/1e6).toFixed(2)  + 'M';
+  if(n >= 1e3)  return (n/1e3).toFixed(1)  + 'K';
+  return String(n);
+}
+function fmtTime(s){
+  s = Math.ceil(s);
+  if(s >= 3600) return Math.floor(s/3600) + 'ч ' + Math.floor((s%3600)/60) + 'м';
+  if(s >= 60)   return Math.floor(s/60)   + 'м ' + (s%60) + 'с';
+  return s + 'с';
+}
+
+// ═══════════════════════════════════════════════
+// PARTICLES
+// ═══════════════════════════════════════════════
+function initParticles(){
+  const cv  = document.getElementById('particles');
+  if(!cv) return;
+  const ctx = cv.getContext('2d');
+  cv.width  = window.innerWidth;
+  cv.height = window.innerHeight;
+  const pts = Array.from({length:50}, () => ({
+    x: Math.random()*cv.width, y: Math.random()*cv.height,
+    r: Math.random()*1.2+.2,
+    vx:(Math.random()-.5)*.2, vy:-Math.random()*.4-.1,
+    a: Math.random()*.4+.05
+  }));
+  (function draw(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    pts.forEach(p => {
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(0,229,255,${p.a})`; ctx.fill();
+      p.x += p.vx; p.y += p.vy;
+      if(p.y < 0){ p.y = cv.height; p.x = Math.random()*cv.width; }
+      if(p.x < 0 || p.x > cv.width) p.vx *= -1;
+    });
+    requestAnimationFrame(draw);
+  })();
+}
+
+// ═══════════════════════════════════════════════
+// SAVE / LOAD / OFFLINE INCOME
+// ═══════════════════════════════════════════════
+function saveGame(){
+  S.savedAt = Date.now();
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){}
+}
+
+function loadGame(){
+  try{
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return;
+    const saved = JSON.parse(raw);
+    // Мержим поверх дефолтного состояния — так не потеряются новые поля
+    S = Object.assign(defaultState(), saved);
+    // Гарантируем нужные вложенные объекты
+    if(!S.upg)     S.upg     = {};
+    if(!S.miners)  S.miners  = {};
+    if(!S.boosts)  S.boosts  = {};
+    if(!S.quests)  S.quests  = {};
+    if(!S.ton)     S.ton     = {addr:'', withdrawn:0};
+
+    // ═══ ОФЛАЙН ДОХОД ═══
+    const elapsed  = Math.max(0, (Date.now() - (S.savedAt || Date.now())) / 1000);
+    // Максимум 8 часов офлайна
+    const offlineSec = Math.min(elapsed, 8 * 3600);
+    const rate = passiveRate(); // пересчитываем с загруженными апгрейдами
+    if(rate > 0 && offlineSec > 5){
+      const gained = rate * offlineSec;
+      S.balance += gained;
+      S.earned  += gained;
+      setTimeout(() => {
+        showNotif('💤 Офлайн ' + fmtTime(offlineSec) + ': +' + fmt(gained) + ' монет');
+      }, 700);
+    }
+  }catch(e){
+    console.error('Load error:', e);
+    S = defaultState();
+  }
+}
+
+// ═══════════════════════════════════════════════
+// GAME LOOP — 100мс тик
+// ═══════════════════════════════════════════════
+let lastTick = Date.now();
+let tickN    = 0;
+
+function gameTick(){
+  const now = Date.now();
+  const dt  = Math.min((now - lastTick) / 1000, 1); // не больше 1 сек за тик
+  lastTick  = now;
+  tickN++;
+
+  const maxE = maxEnergy();
+  const pr   = passiveRate();
+
+  // пассивный доход
+  if(pr > 0){
+    S.balance  += pr * dt;
+    S.earned   += pr * dt;
+    S.earnDay  = (S.earnDay || 0) + pr * dt;
+  }
+
+  // реген энергии: 3 ед/сек
+  if(S.energy < maxE){
+    S.energy = Math.min(maxE, S.energy + 3 * dt);
+  }
+
+  // сброс дейли
+  resetDailyIfNeeded();
+
+  // HUD каждый тик (быстро — только textContent)
+  updateHUD();
+
+  // Списки — раз в секунду (каждые 10 тиков по 100мс)
+  if(tickN % 10 === 0){
+    // помечаем что кнопки могли стать доступны из-за passive income
+    if(pr > 0){ dirty.upg = true; dirty.miners = true; }
+    renderDirty();
+  }
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+window.addEventListener('load', () => {
+  // Подставляем имя из Telegram
+  const tgU = getTgUser();
+  if(tgU){
+    const nameEl = document.getElementById('tb-name');
+    if(nameEl) nameEl.textContent = tgU.first_name + (tgU.last_name ? ' '+tgU.last_name : '');
+    if(tgU.photo_url){
+      const ava = document.getElementById('tb-avatar');
+      if(ava){ ava.style.background = `url(${tgU.photo_url}) center/cover`; ava.textContent = ''; }
+    }
+  }
+
+  loadGame();
+
+  shownLvl = getLevel().lvl;
+  S.lvl    = shownLvl;
+
+  applySkin();
+  initParticles();
+
+  // монета видна только на странице mine
+  const cz = document.getElementById('coin-zone');
+  if(cz) cz.style.display = 'flex';
+
+  markAllDirty();
+  updateHUD();
+  renderDirty();
+
+  // Игровой цикл
+  setInterval(gameTick, 100);
+  // Автосохранение
+  setInterval(saveGame, 15000);
+  // Кулдауны бустов обновляем раз в сек
+  setInterval(() => { dirty.boosts = true; }, 1000);
+});
+
+window.addEventListener('beforeunload', saveGame);
+
+</script>
+</body>
+</html>
